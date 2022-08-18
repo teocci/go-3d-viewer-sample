@@ -1,0 +1,58 @@
+/**
+ * Created by RTT.
+ * Author: teocci@yandex.com on 2022-6월-10
+ */
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body * {
+    font-family: "Source Sans Pro", sans-serif;
+}
+
+#viewers {
+    display: flex;
+    flex-flow: row wrap;
+    width: 100vw;
+    height: 100vh;
+}
+
+.viewer {
+    width: 50vw;
+    height: 50vh;
+    position: relative;
+}
+
+
+.wrap {
+    display: flex;
+    width: 100vw;
+    flex-grow: 1;
+    position: relative;
+}
+
+#drop-zoner {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropper {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 0.5em;
+    background: #EEE;
+    padding: 2em;
+    text-align: center;
+}
+
+.dropper p {
+    font-size: 1.2rem;
+    color: #999;
+}
