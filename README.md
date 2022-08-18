@@ -1,4 +1,4 @@
-## go-3d-viewer-sample-sample [![Go Reference][1]][2]
+## go-3d-viewer-sample [![Go Reference][1]][2]
 
 `go-3d-viewer-sample-sample` is an open-source sample using gin-gonic as a webserver and WebGL and Three.js for plotting 3d Models.
 
