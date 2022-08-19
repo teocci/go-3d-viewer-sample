@@ -4,6 +4,8 @@
  */
 
 import zip from '../libs/zip/zip.js'
+import ZipDirectoryEntry from './zip-directory-entry.js'
+import ZipFileEntry from './zip-file-entry.js'
 
 const table = {
     'application': {
@@ -973,6 +975,12 @@ const mimeTypes = (() => {
 })()
 
 export default class ZipFsUtil {
+    static addChild(parent, name, params, directory) {
+        if (!parent.directory) throw 'Parent entry is not a directory.'
+
+        return directory ? new ZipDirectoryEntry(parent.fs, name, params, parent) : new ZipFileEntry(parent.fs, name, params, parent)
+    }
+
     static detach(entry) {
         const children = entry.parent.children
         children.forEach((child, index) => {

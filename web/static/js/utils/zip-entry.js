@@ -1,5 +1,3 @@
-import ZipFileEntry from './zip-file-entry.js'
-import ZipDirectoryEntry from './zip-directory-entry.js'
 import zip from '../libs/zip/zip.js'
 import ZipFsUtil from './zip-fs-util.js'
 
@@ -109,12 +107,6 @@ export default class ZipEntry {
         }
 
         stepCopy()
-    }
-
-    addChild(parent, name, params, directory) {
-        if (!parent.directory) throw 'Parent entry is not a directory.'
-
-        return directory ? new ZipDirectoryEntry(parent.fs, name, params, parent) : new ZipFileEntry(parent.fs, name, params, parent)
     }
 
     initReaders(entry, onend, onerror) {

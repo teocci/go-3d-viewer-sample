@@ -5,6 +5,7 @@
 import ZipEntry from './zip-entry.js'
 import zip from '../libs/zip/zip.js'
 import ZipBlobReader from './zip-blob-reader.js'
+import ZipFsUtil from './zip-fs-util.js'
 
 export default class ZipDirectoryEntry extends ZipEntry {
     constructor(fs, name, params, parent) {
@@ -14,11 +15,11 @@ export default class ZipDirectoryEntry extends ZipEntry {
     }
 
     addDirectory(name) {
-        return this.addChild(this, name, null, true)
+        return ZipFsUtil.addChild(this, name, null, true)
     }
 
     addText(name, text) {
-        return this.addChild(this, name, {
+        return ZipFsUtil.addChild(this, name, {
             data: text,
             Reader: zip.TextReader,
             Writer: zip.TextWriter,
@@ -26,7 +27,7 @@ export default class ZipDirectoryEntry extends ZipEntry {
     }
 
     addBlob(name, blob) {
-        return this.addChild(this, name, {
+        return ZipFsUtil.addChild(this, name, {
             data: blob,
             Reader: zip.BlobReader,
             Writer: zip.BlobWriter,
@@ -34,7 +35,7 @@ export default class ZipDirectoryEntry extends ZipEntry {
     }
 
     addData64URI(name, dataURI) {
-        return this.addChild(this, name, {
+        return ZipFsUtil.addChild(this, name, {
             data: dataURI,
             Reader: zip.Data64URIReader,
             Writer: zip.Data64URIWriter,
@@ -46,7 +47,7 @@ export default class ZipDirectoryEntry extends ZipEntry {
     }
 
     addData(name, params) {
-        return this.addChild(this, name, params)
+        return ZipFsUtil.addChild(this, name, params)
     }
 
     importBlob(blob, onend, onerror) {
@@ -89,7 +90,7 @@ export default class ZipDirectoryEntry extends ZipEntry {
                     })
 
                     if (!entry.directory)
-                        this.addChild(parent, name, {
+                        ZipFsUtil.addChild(parent, name, {
                             data: entry,
                             Reader: ZipBlobReader,
                         })
