@@ -2,6 +2,8 @@
  * Created by RTT.
  * Author: teocci@yandex.com on 2022-8월-17
  */
+import ZipFSManager from '../utils/zip-fs-manager.js'
+
 export default class DropZoner {
     /**
      * @param  {Element} placeholder
@@ -56,7 +58,7 @@ export default class DropZoner {
         input.type = 'file'
         input.id = 'file-input'
         input.name = 'model'
-        input.accept = 'application/octet-stream,model/stl,model/x.stl-ascii,model/x.stl-binary'
+        input.accept = '.fbx,.stl'
 
         const label = document.createElement('label')
         label.for = 'file-input'
@@ -106,8 +108,15 @@ export default class DropZoner {
         const placeholder = this.placeholder
         const inputElement = this.inputElement
 
-        placeholder.removeEventListener('dragover', this.onDragOver, false)
-        placeholder.removeEventListener('drop', this.onDrop, false)
+
+
+        placeholder.drag = this.onDrag
+        placeholder.dragend = this.onDragEnd
+        placeholder.dragenter = this.onDragEnter
+        placeholder.dragleave = this.onDragLeave
+        placeholder.ondragover = this.onDragOver
+        placeholder.ondragstart = this.onDragStart
+        placeholder.ondrop = this.onDrop
 
         inputElement.removeEventListener('change', this.onSelect)
 
@@ -175,11 +184,10 @@ export default class DropZoner {
      */
     onDragStart(event) {
         this.preventDefaults(event)
-
     }
 
     /**
-     * References (and horror):
+     * References:
      * - https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/items
      * - https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/files
      * - https://code.flickr.net/2012/12/10/drag-n-drop/
@@ -209,7 +217,6 @@ export default class DropZoner {
         // Prefer .items, which allow folder traversal if necessary.
         if (itemsCount > 0) {
             const entries = items.map(item => item.webkitGetAsEntry())
-
             if (entries[0].name.match(/\.zip$/)) {
                 this.loadZip(items[0].getAsFile())
             } else {
@@ -228,6 +235,7 @@ export default class DropZoner {
     }
 
     /**
+     *
      * @param  {Event} e
      */
     onSelect(e) {
@@ -243,14 +251,14 @@ export default class DropZoner {
         }
 
         const fileMap = new Map()
-        files.forEach(file => fileMap.set(file.webkitRelativePath || file.name, file))
-
+        files.forEach(file => fileMap.set(file.webkitRelativePath ?? file.name, file))
         this.emit('drop', {files: fileMap})
     }
 
     /**
      * Iterates through a list of FileSystemEntry objects, creates the fileMap
      * tree, and emits the result.
+     *
      * @param  {Map<string, File>} fileMap
      * @param  {Array<FileSystemEntry>} entries
      */
@@ -297,7 +305,7 @@ export default class DropZoner {
     loadZip(file) {
         const pending = []
         const fileMap = new Map()
-        const archive = new FFlate.Unzip
+        const archive = new ZipFSManager()
 
         const traverse = node => {
             if (node.directory) {
