@@ -3,13 +3,14 @@
  * Author: teocci@yandex.com on 2022-8월-17
  */
 import ZipFSManager from '../utils/zip-fs-manager.js'
+import BaseComponent from '../base/base-component.js'
 
-export default class DropZoner {
+export default class DropZoner extends BaseComponent {
     /**
      * @param  {Element} placeholder
      */
     constructor(placeholder) {
-        this.placeholder = placeholder
+        super(placeholder)
 
         this.dropperElement = null
         this.inputElement = null
@@ -107,8 +108,6 @@ export default class DropZoner {
     destroy() {
         const placeholder = this.placeholder
         const inputElement = this.inputElement
-
-
 
         placeholder.drag = this.onDrag
         placeholder.dragend = this.onDragEnd

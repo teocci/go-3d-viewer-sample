@@ -1,0 +1,67 @@
+/**
+ * Created by RTT.
+ * Author: teocci@yandex.com on 2022-8월-22
+ */
+
+
+/*#notifier {*/
+/*    position: absolute;*/
+/*    top: 0;*/
+/*    width: 100%;*/
+/*    height: 0;*/
+/*    box-sizing: border-box;*/
+/*    color: white;*/
+/*    text-align: center;*/
+/*    background: rgba(0, 0, 0, .6);*/
+/*    transition: height .2s;*/
+/*    overflow: hidden;*/
+/*}*/
+
+/*#notifier .notice {*/
+/*    display: block;*/
+/*    margin-top: 15px;*/
+/*    height: 20px;*/
+/*}*/
+
+.notices {
+    position: fixed;
+    z-index: 5000;
+    bottom: 10px;
+    right: 10px;
+    width: 300px;
+}
+
+.notifier, .notices {
+    font-family: sans-serif;
+}
+
+.notifier {
+    background: #fff;
+    border: 10px solid rgba(0, 0, 0, .7);
+    border-radius: 8px;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, .3);
+    -webkit-background-clip: padding;
+    /* Safari 4? Chrome 6? */
+    -moz-background-clip: padding;
+    /* Firefox 3.6 */
+    background-clip: padding-box;
+    /* Firefox 4, Safari 5, Opera 10, IE 9 */
+}
+
+
+.notice {
+    background: #1f1f1f;
+    background: rgba(0, 0, 0, .9);
+    padding: 15px;
+    border-radius: 4px;
+    color: #fff;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, .5);
+}
+
+#notifier .success {
+    background: hsla(163, 96%, 33%, 0.6);
+}
+
+#notifier .failure {
+    background: hsla(0, 100%, 61%, 0.6);
+}

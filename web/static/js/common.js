@@ -25,18 +25,24 @@ function serializeDate() {
 }
 
 function distanceFormatter(d, precision = 2) {
-    const rx = /\.0+$|(\.\d*[1-9])0+$/;
+    const rx = /\.0+$|(\.\d*[1-9])0+$/
     const lookup = [
-        {value: 1, symbol: ""},
-        {value: 1e3, symbol: "k"},
-        {value: 1e6, symbol: "M"},
-        {value: 1e9, symbol: "G"},
-        {value: 1e12, symbol: "T"},
-        {value: 1e15, symbol: "P"},
-        {value: 1e18, symbol: "E"}
+        {value: 1, symbol: ''},
+        {value: 1e3, symbol: 'k'},
+        {value: 1e6, symbol: 'M'},
+        {value: 1e9, symbol: 'G'},
+        {value: 1e12, symbol: 'T'},
+        {value: 1e15, symbol: 'P'},
+        {value: 1e18, symbol: 'E'},
     ]
-    const item = lookup.slice().reverse().find(item => d >= item.value) ?? {value: 1, symbol: ""}
+    const item = lookup.slice().reverse().find(item => d >= item.value) ?? {value: 1, symbol: ''}
     const val = (d / item.value).toFixed(precision).replace(rx, '$1')
 
     return `${val} ${item.symbol}m`
+}
+
+function wait(ms) {
+    const start = performance.now()
+    let end = start
+    while (end < start + ms) end = performance.now()
 }

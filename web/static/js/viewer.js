@@ -2,6 +2,7 @@
  * Created by RTT.
  * Author: teocci@yandex.com on 2022-7월-12
  */
+import BaseComponent from './base/base-component.js'
 import STLLoader from './loaders/stl-loader.js'
 import ObjLoader from './loaders/obj-loader.js'
 import FBXLoader from './loaders/fbx-loader.js'
@@ -10,7 +11,12 @@ import PYLLoader from './loaders/ply-loader.js'
 import OrbitControls from './controls/orbit.js'
 import Stats from './modules/stats.js'
 
-export default class Viewer {
+export default class Viewer extends BaseComponent {
+    static TAG = 'viewer'
+
+    static LISTENER_LOADED = 'on-loader'
+    static LISTENER_ERROR = 'on-error'
+
     static DEFAULT_FOG_COLOR = 10526880
 
     static AMBIENT_LIGHT_ID = 'ambientLight'
@@ -225,7 +231,8 @@ export default class Viewer {
     ]
 
     constructor(element) {
-        this.placeholder = element
+        super(element)
+
         this.lights = new Map()
         this.shaders = {
             frag: null,
@@ -440,6 +447,16 @@ export default class Viewer {
     }
 
     loadModel(type, url) {
+        const ctx = this
+        const onLoaded = () => {
+            const cb = this.listener(Viewer.LISTENER_LOADED)
+            if (cb) cb()
+        }
+        const onError = (error) => {
+            const cb = this.listener(Viewer.LISTENER_ERROR)
+            if (cb) cb(error)
+        }
+
         let loader
         switch (type) {
             case STLLoader.TAG:
@@ -452,9 +469,11 @@ export default class Viewer {
 
                         this.loadLights()
                         this.loadMesh()
+
+                        onLoaded()
                     },
                     xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
-                    error => console.log(error),
+                    error => onError(error),
                 )
                 break
             case ObjLoader.TAG:
@@ -472,9 +491,11 @@ export default class Viewer {
 
                         this.loadLights()
                         this.loadMesh()
+
+                        onLoaded()
                     },
                     xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
-                    error => console.log(error),
+                    error => onError(error),
                 )
                 break
             case FBXLoader.TAG:
@@ -506,9 +527,11 @@ export default class Viewer {
                         this.fitCameraToMesh()
 
                         this.loadMesh()
+
+                        onLoaded()
                     },
                     xhr => console.log(`${(xhr.loaded / xhr.total) * 100}% loaded`),
-                    error => console.log(error),
+                    error => onError(error),
                 )
                 break
             case PYLLoader.TAG:
@@ -550,12 +573,14 @@ export default class Viewer {
                         this.loadLights()
                         this.loadMesh()
 
+                        onLoaded()
+
                         // position = new THREE.Vector3()
                         // position.setFromMatrixPosition(mesh.matrixWorld)
                         // console.log({position})
                     },
                     xhr => console.log((xhr.loaded / xhr.total) * 100 + '% loaded'),
-                    error => console.log(error),
+                    error => onError(error),
                 )
                 break
             default:
