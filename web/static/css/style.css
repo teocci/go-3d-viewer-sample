@@ -2,21 +2,70 @@
  * Created by RTT.
  * Author: teocci@yandex.com on 2022-6월-10
  */
+@import "variables.css";
 @import "default.css";
 @import "spinner.css";
 @import "notifier.css";
+@import "dropzoner.css";
+@import "toolbar.css";
+
+main {
+    width: 100vw;
+    height: calc(100vh - var(--footer-height));
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+footer {
+    height: var(--footer-height);
+    line-height: 2rem;
+    background-color: var(--bg-light-gray);
+    overflow: hidden;
+    user-select: none;
+}
+
+footer .copy {
+    font-size: 0.8rem;
+    color: var(--font-dark-color);
+    text-align: center;
+    white-space: nowrap;
+}
 
 #viewers {
     display: flex;
     flex-flow: row wrap;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - var(--footer-height));
 }
 
-#viewers .viewer {
+#viewers .view-holder {
+    width: 100vw;
+    height: calc(100vh - var(--footer-height));
+    position: relative;
+}
+
+.view-holder .viewer {
     width: 100%;
     height: 100%;
-    position: relative;
+}
+
+.view-holder .stats {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.9;
+    z-index: 10000;
+    user-select: none;
+}
+
+.view-holder .stats canvas {
+    cursor: pointer;
+}
+
+.view-holder .stats span {
+    margin-left: 15px;
 }
 
 #viewers .wrap {
@@ -24,28 +73,6 @@
     width: 100vw;
     flex-grow: 1;
     position: relative;
-}
-
-#drop-zoner {
-    display: flex;
-    flex-grow: 1;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.dropper {
-    width: 100%;
-    max-width: 500px;
-    border-radius: 0.5em;
-    background: #EEE;
-    padding: 2em;
-    text-align: center;
-}
-
-.dropper p {
-    font-size: 1.2rem;
-    color: #999;
 }
 
 .hidden {

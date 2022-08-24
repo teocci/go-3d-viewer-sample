@@ -201,6 +201,7 @@ export default class Notifier extends BaseComponent {
                 if (self.transition.supported) {
                     self.bind(el, self.transition.type, transitionDone)
                     el.classList.add('hidden')
+                    el.classList.remove('active')
                 } else {
                     logs.removeChild(el)
                     if (!logs.hasChildNodes()) logs.classList.add('hidden')
@@ -242,9 +243,5 @@ export default class Notifier extends BaseComponent {
 
     failure(msg, wait) {
         this.log(msg, Notifier.TYPE_FAILURE, wait)
-    }
-
-    clear(notice) {
-        this.hide(notice)
     }
 }

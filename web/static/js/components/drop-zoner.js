@@ -57,22 +57,24 @@ export default class DropZoner extends BaseComponent {
         const input = document.createElement('input')
         input.id = 'file-input'
         input.type = 'file'
-        input.id = 'file-input'
         input.name = 'model'
         input.accept = '.fbx,.stl'
+        input.hidden = true
 
         const label = document.createElement('label')
-        label.for = 'file-input'
+        label.htmlFor = 'file-input'
 
-        const image = document.createElement('img')
-        image.src = './img/upload-btn.svg'
-        image.alt = 'upload-btn'
+        // const icon = document.createElement('img')
+        // icon.src = './img/upload-btn.svg'
+        // icon.alt = 'upload-btn'
+        const icon = document.createElement('i')
+        icon.classList.add('fa-solid', 'fa-upload')
 
         const span = document.createElement('span')
         span.textContent = 'Upload'
 
         dropperElement.appendChild(p)
-        label.append(image, span)
+        label.append(icon, span)
         selectorElement.append(input, label)
 
         this.placeholder.append(dropperElement, selectorElement)
@@ -216,19 +218,20 @@ export default class DropZoner extends BaseComponent {
         // Prefer .items, which allow folder traversal if necessary.
         if (itemsCount > 0) {
             const entries = items.map(item => item.webkitGetAsEntry())
-            if (entries[0].name.match(/\.zip$/)) {
-                this.loadZip(items[0].getAsFile())
-            } else {
-                this.loadNextEntry(new Map(), entries)
-            }
+            // if (entries[0].name.match(/\.zip$/)) {
+            //     this.loadZip(items[0].getAsFile())
+            // } else {
+            //     this.loadNextEntry(new Map(), entries)
+            // }
+            this.loadNextEntry(new Map(), entries)
 
             return
         }
 
         // Fall back to .files, since folders can't be traversed.
-        if (filesCount === 1 && files[0].name.match(/\.zip$/)) {
-            this.loadZip(files[0])
-        }
+        // if (filesCount === 1 && files[0].name.match(/\.zip$/)) {
+        //     this.loadZip(files[0])
+        // }
 
         this.emit('drop', {files: new Map(files.map(file => [file.name, file]))})
     }
@@ -244,10 +247,10 @@ export default class DropZoner extends BaseComponent {
         const files = [].slice.call(this.inputElement.files)
 
         // Automatically decompress a zip archive if it is the only file given.
-        if (files.length === 1 && this.isZip(files[0])) {
-            this.loadZip(files[0])
-            return
-        }
+        // if (files.length === 1 && this.isZip(files[0])) {
+        //     this.loadZip(files[0])
+        //     return
+        // }
 
         const fileMap = new Map()
         files.forEach(file => fileMap.set(file.webkitRelativePath ?? file.name, file))

@@ -1035,6 +1035,6 @@ const Zip = {
      *   inflater: ['z-worker.js', 'inflate.js']
      * };
      */
-    workerScripts: null,
+    workerScripts: './js/lib/zip/z-worker.js',
 }
 export default Zip

@@ -2,14 +2,14 @@
  * Created by RTT.
  * Author: teocci@yandex.com on 2022-7월-12
  */
-import BaseComponent from './base/base-component.js'
-import STLLoader from './loaders/stl-loader.js'
-import ObjLoader from './loaders/obj-loader.js'
-import FBXLoader from './loaders/fbx-loader.js'
-// import {FBXLoader} from './loaders/FBXLoader.js'
-import PYLLoader from './loaders/ply-loader.js'
-import OrbitControls from './controls/orbit.js'
-import Stats from './modules/stats.js'
+import BaseComponent from '../base/base-component.js'
+import STLLoader from '../loaders/stl-loader.js'
+import ObjLoader from '../loaders/obj-loader.js'
+import FBXLoader from '../loaders/fbx-loader.js'
+import PYLLoader from '../loaders/ply-loader.js'
+import OrbitControls from '../controls/orbit.js'
+import Stats from '../modules/stats.js'
+import Toolbar from './toolbar.js'
 
 export default class Viewer extends BaseComponent {
     static TAG = 'viewer'
@@ -244,6 +244,8 @@ export default class Viewer extends BaseComponent {
             [ctx.shaders.frag, ctx.shaders.vert] = shaders
         })
 
+        this.initElements()
+
         this.initLights()
         this.initHemisphereLight()
         this.initAmbientLight()
@@ -254,11 +256,18 @@ export default class Viewer extends BaseComponent {
         this.initRenderer()
         this.initControls()
 
-        this.stats = new Stats()
-
         this.initEventListeners()
 
         this.appendElements()
+    }
+
+    initElements() {
+        this.viewerElement = document.createElement('div')
+        this.viewerElement.classList.add('viewer')
+
+        const toolbarElement = document.createElement('div')
+        this.toolbar = new Toolbar(toolbarElement)
+        this.stats = new Stats()
     }
 
     loadShaders() {
@@ -324,9 +333,10 @@ export default class Viewer extends BaseComponent {
     }
 
     initCamera() {
+        const view = this.viewerElement
         const payload = Viewer.DEFAULT_CAMERA_PAYLOAD
         const options = payload.options
-        const aspect = this.placeholder.offsetWidth / this.placeholder.offsetHeight
+        const aspect = view.offsetWidth / view.offsetHeight
         this.camera = new THREE.PerspectiveCamera(options.fov, aspect)
         const {x, y, z} = options.position
         this.camera.position.set(x, y, z)
@@ -341,16 +351,17 @@ export default class Viewer extends BaseComponent {
         // this.scene.environment
 
         const color = 0xa0a0a0
-        const density = 0.002
-        // this.scene.background = new THREE.Color(color)
-        // this.scene.fog = new THREE.FogExp2(color, density)
-        this.scene.fog = new THREE.Fog(color, 0.1, 2000)
+        const density = 0.001
+        this.scene.background = new THREE.Color(color)
+        this.scene.fog = new THREE.FogExp2(color, density)
+        // this.scene.fog = new THREE.Fog(color, 0.1, 1500)
     }
 
     initRenderer() {
+        const viewer = this.viewerElement
         this.renderer = new THREE.WebGLRenderer({antialias: true})
         this.renderer.setPixelRatio(window.devicePixelRatio)
-        this.renderer.setSize(this.placeholder.offsetWidth, this.placeholder.offsetHeight)
+        this.renderer.setSize(viewer.offsetWidth, viewer.offsetHeight)
         this.renderer.outputEncoding = THREE.sRGBEncoding
         this.renderer.shadowMap.enabled = true
         this.renderer.physicallyCorrectLights = true
@@ -405,6 +416,8 @@ export default class Viewer extends BaseComponent {
     initEventListeners() {
         this.resizeObserver = new ResizeObserver(entries => this.onResize(entries))
         this.resizeObserver.observe(this.placeholder)
+
+        this.toolbar.addListener(Toolbar.LISTENER_CAMERA_CONTROL_EVENT, (e, params) => this.onToolbarEvent(e, params[0]))
     }
 
     initMesh(geometry) {
@@ -438,8 +451,9 @@ export default class Viewer extends BaseComponent {
     }
 
     appendElements() {
-        this.placeholder.appendChild(this.renderer.domElement)
-        this.placeholder.appendChild(this.stats.dom)
+        const viewer = this.viewerElement
+        viewer.appendChild(this.renderer.domElement)
+        this.placeholder.append(viewer, this.stats.dom, this.toolbar.dom)
     }
 
     static async loadShader(path) {
@@ -676,9 +690,7 @@ export default class Viewer extends BaseComponent {
         requestAnimationFrame(() => this.animate())
 
         this.controls.update()
-
         this.render()
-
         this.stats.update()
     }
 
@@ -686,17 +698,18 @@ export default class Viewer extends BaseComponent {
         this.renderer.render(this.scene, this.camera)
     }
 
-    onResize(entries) {
-        this.camera.aspect = this.placeholder.offsetWidth / this.placeholder.offsetHeight
+    onResize() {
+        const viewer = this.viewerElement
+        this.camera.aspect = viewer.offsetWidth / viewer.offsetHeight
         this.camera.updateProjectionMatrix()
 
-        this.renderer.setSize(this.placeholder.offsetWidth, this.placeholder.offsetHeight)
+        this.renderer.setSize(viewer.offsetWidth, viewer.offsetHeight)
 
         this.render()
     }
 
     fitCameraToMesh(fitOffset) {
-        fitOffset = fitOffset ?? 1.2
+        fitOffset = fitOffset ?? 1.5
         const box = new THREE.Box3()
         box.makeEmpty()
         box.expandByObject(this.mesh)
@@ -727,5 +740,31 @@ export default class Viewer extends BaseComponent {
         this.camera.position.copy(this.controls.target).sub(direction)
 
         this.controls.update()
+    }
+
+    onToolbarEvent(e, key) {
+        console.log({key, target: e.target})
+        const mouseButtons = this.controls.mouseButtons
+        switch (key) {
+            case Toolbar.CAMERA_CONTROL_PAN:
+                mouseButtons.LEFT = THREE.MOUSE.PAN
+                mouseButtons.RIGHT = THREE.MOUSE.ROTATE
+                this.controls.enableWheel = true
+                break
+            case Toolbar.CAMERA_CONTROL_ZOOM:
+                mouseButtons.LEFT = THREE.MOUSE.DOLLY
+                mouseButtons.RIGHT = THREE.MOUSE.ROTATE
+                this.controls.enableWheel = false
+                break
+            default:
+                mouseButtons.LEFT = THREE.MOUSE.ROTATE
+                mouseButtons.RIGHT = THREE.MOUSE.PAN
+                this.controls.enableWheel = true
+        }
+
+        if (key === Toolbar.CAMERA_CONTROL_RESET) {
+            this.controls.reset()
+            this.fitCameraToMesh()
+        }
     }
 }

@@ -2,10 +2,11 @@ import STLLoader from './loaders/stl-loader.js'
 import OBJLoader from './loaders/obj-loader.js'
 import FBXLoader from './loaders/fbx-loader.js'
 import PYLLoader from './loaders/ply-loader.js'
-import Viewer from './viewer.js'
+import Viewer from './components/viewer.js'
 import DropZoner from './components/drop-zoner.js'
 import Spinner from './components/spinner.js'
 import Notifier from './components/notifier.js'
+import Toolbar from './components/toolbar.js'
 
 /**
  * Created by RTT.
@@ -36,19 +37,22 @@ export default class ViewerModule {
     initElement() {
         this.placeholder = document.getElementById('main')
 
-        const dropZonerElement = document.getElementById('drop-zoner')
+        const dropZonerElement = document.getElementById('file-loader')
         const spinnerElement = document.getElementById('spinner')
         const notifierElement = document.getElementById('notifier')
 
         this.dropZoner = new DropZoner(dropZonerElement)
         this.spinner = new Spinner(spinnerElement)
         this.notifier = new Notifier(notifierElement)
+
+        const viewersElement = document.getElementById('viewers')
+        viewersElement.classList.add('hidden')
     }
 
     initViewers() {
         ViewerModule.FORMAT_LIST.forEach(f => {
             const element = document.createElement('div')
-            element.classList.add('viewer')
+            element.classList.add('view-holder')
             this.placeholder.appendChild(element)
 
             const viewer = new Viewer(element)
@@ -63,13 +67,20 @@ export default class ViewerModule {
     }
 
     initViewer(type) {
+        const ctx = this
         const viewersElement = document.getElementById('viewers')
 
-        const element = document.createElement('div')
-        element.classList.add('viewer')
-        viewersElement.appendChild(element)
+        const holder = document.createElement('div')
+        holder.classList.add('view-holder')
 
-        const viewer = new Viewer(element)
+        viewersElement.appendChild(holder)
+        viewersElement.classList.remove('hidden')
+
+        const viewer = new Viewer(holder)
+        viewer.toolbar.addListener(Toolbar.LISTENER_FILE_CONTROL_OPEN_EVENT, () => {
+            ctx.reset()
+        })
+
         this.viewer = viewer
         this.viewers.set(type, viewer)
     }
@@ -110,6 +121,7 @@ export default class ViewerModule {
         console.log({fileInfo})
         const type = fileInfo.ext
 
+        this.dropZoner.hide()
         this.initViewer(type)
 
         const viewer = this.viewer
@@ -122,14 +134,13 @@ export default class ViewerModule {
         }
 
         viewer.addListener(Viewer.LISTENER_LOADED, () => {
-            cleanup()
-            this.dropZoner.hide()
             this.notifier.success('Model loaded!')
+            cleanup()
         })
         viewer.addListener(Viewer.LISTENER_ERROR, cleanup)
 
         viewer.loadModel(type, fileURL)
-        if (type !== FBXLoader.TAG) viewer.onResize()
+        viewer.onResize()
         viewer.animate()
     }
 
@@ -149,7 +160,26 @@ export default class ViewerModule {
         this.notifier.failure(message)
         // console.error(error)
 
+        this.dropZoner.show()
         this.hideSpinner()
+    }
+
+    showViewers() {
+        const viewersElement = document.getElementById('viewers')
+        viewersElement.classList.remove('hidden')
+    }
+
+    hideViewers() {
+        const viewersElement = document.getElementById('viewers')
+        viewersElement.classList.add('hidden')
+    }
+
+    destroyViewers() {
+        const viewersElement = document.getElementById('viewers')
+        while (viewersElement.firstChild) {
+            const lastChild = viewersElement.lastChild ?? false
+            if (lastChild) viewersElement.removeChild(lastChild)
+        }
     }
 
     showSpinner() {
@@ -167,5 +197,12 @@ export default class ViewerModule {
             if (f.type !== FBXLoader.TAG) viewer.onResize()
             viewer.animate()
         })
+    }
+
+    reset() {
+        this.showSpinner()
+        setTimeout(() => {
+            location.reload()
+        }, 500)
     }
 }

@@ -38,6 +38,7 @@ func Start() {
 	router.StaticFS("/3d", http.Dir("web/static/3d"))
 	router.StaticFS("/glsl", http.Dir("web/static/glsl"))
 	router.StaticFile("/page.html", "web/static/page.html")
+	router.StaticFile("/favicon.ico", "web/static/favicon.ico")
 
 	router.Use(CORSMiddleware())
 

@@ -41,8 +41,9 @@ function distanceFormatter(d, precision = 2) {
     return `${val} ${item.symbol}m`
 }
 
-function wait(ms) {
+function wait(ms, fn) {
     const start = performance.now()
     let end = start
     while (end < start + ms) end = performance.now()
+    if (fn instanceof Function) fn()
 }

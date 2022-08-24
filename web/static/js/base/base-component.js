@@ -32,26 +32,30 @@ export default class BaseComponent extends BaseListener {
         this.element = element
     }
 
-    toggle(val, element) {
-        element = element ?? this.placeholder
+    toggle(val) {
+        const element = this.dom
         element.classList.toggle('hidden', val)
     }
 
-    show(element) {
-        element = element ?? this.placeholder
+    show() {
+        const element = this.dom
         element.classList.remove('hidden')
     }
 
-    hide(element) {
-        element = element ?? this.placeholder
+    hide() {
+        const element = this.dom
         element.classList.add('hidden')
     }
 
     destroyChildren(element) {
-        element = element ?? this.placeholder
+        element = element ?? this.dom
         while (element.firstChild) {
             const lastChild = element.lastChild ?? false
             if (lastChild) element.removeChild(lastChild)
         }
+    }
+
+    get dom() {
+        return this.placeholder
     }
 }

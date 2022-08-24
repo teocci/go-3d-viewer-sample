@@ -1,0 +1,96 @@
+/**
+ * Created by RTT.
+ * Author: teocci@yandex.com on 2022-8월-23
+ */
+
+#file-loader {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropper {
+    width: 100%;
+    max-width: 50vw;
+    border-radius: 0.5em;
+    background: var(--bg-light-gray);
+    padding: 2em;
+    text-align: center;
+    user-select: none;
+}
+
+.dropper p {
+    font-size: 1.2rem;
+    color: var(--font-mild-color);
+}
+
+
+.file-selector {
+    margin-top: 2em;
+}
+
+.file-selector input::file-selector-button {
+    visibility: hidden;
+}
+
+/*.file-selector input::before {*/
+/*    content: 'Select some files';*/
+/*    display: inline-block;*/
+/*    background: linear-gradient(top, #f9f9f9, #e3e3e3);*/
+/*    border: 1px solid #999;*/
+/*    border-radius: 3px;*/
+/*    padding: 5px 8px;*/
+/*    outline: none;*/
+/*    white-space: nowrap;*/
+/*    user-select: none;*/
+/*    cursor: pointer;*/
+/*    text-shadow: 1px 1px #fff;*/
+/*    font-weight: 700;*/
+/*    font-size: 10pt;*/
+/*}*/
+
+/*.file-selector input:hover::before {*/
+/*    border-color: black;*/
+/*}*/
+
+/*.file-selector input:active::before {*/
+/*    background: linear-gradient(top, #e3e3e3, #f9f9f9);*/
+/*}*/
+
+/*.file-selector label:focus ~ .file-custom {*/
+/*    box-shadow: 0 0 0 .075rem #fff, 0 0 0 .2rem #0074d9;*/
+/*}*/
+
+.file-selector label {
+    color: var(--font-dark-color);
+    border: 0;
+    border-radius: 3px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    display: inline-block;
+    overflow: hidden;
+    padding: 0.625rem 1.25rem;
+    transition: ease 0.2s, background;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.file-selector label:hover {
+    background: var(--bg-light-gray);
+}
+
+.file-selector label i {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    fill: currentColor;
+    margin-top: -0.25em;
+    margin-right: 0.25em;
+}
