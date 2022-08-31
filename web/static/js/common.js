@@ -47,3 +47,7 @@ function wait(ms, fn) {
     while (end < start + ms) end = performance.now()
     if (fn instanceof Function) fn()
 }
+
+const isString = (s, instance = false) => {
+    return typeof s === 'string' || (instance && s instanceof String)
+}

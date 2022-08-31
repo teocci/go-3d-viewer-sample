@@ -197,9 +197,7 @@ export default class ZipEntry {
     }
 
     getFullPath() {
-        const that = this
-
-        let path = that.name, entry = that.parent
+        let path = this.name, entry = this.parent
         while (entry) {
             path = (entry.name ? `${entry.name}/` : '') + path
             entry = entry.parent

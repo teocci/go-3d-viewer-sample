@@ -115,9 +115,22 @@ export default class Notifier extends BaseComponent {
         // check to ensure the alertify dialog element
         // has been successfully created
         const check = () => {
-            if (this.logsElement && this.logsElement.scrollTop !== null) return
-            else check()
+            const logs = this.logsElement
+            const config = {
+                childList: true,
+            }
+            const observer = new MutationObserver(mutation => {
+                if (mutation.type === 'childList') {
+                    console.log({logs})
+                }
+            })
+
+            observer.observe(logs, config)
+            observer.disconnect()
+            // if (!this.logsElement || this.logsElement.scrollTop === null) check()
         }
+        console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+
         // initialize alertify if it hasn't already been done
         this.createLogs()
         check()
@@ -167,6 +180,7 @@ export default class Notifier extends BaseComponent {
      */
     close(elem, wait) {
         const logs = this.logsElement
+
         // Unary Plus: +"2" === 2
         const timer = wait && !isNaN(wait) ? +wait : Notifier.DEFAULT_DURATION
         const self = this

@@ -4,6 +4,7 @@
  */
 import ZipFSManager from '../utils/zip-fs-manager.js'
 import BaseComponent from '../base/base-component.js'
+import zip from '../libs/zip/zip.js'
 
 export default class DropZoner extends BaseComponent {
     /**
@@ -11,6 +12,8 @@ export default class DropZoner extends BaseComponent {
      */
     constructor(placeholder) {
         super(placeholder)
+
+        this.enableMultiFiles = false
 
         this.dropperElement = null
         this.inputElement = null
@@ -100,7 +103,6 @@ export default class DropZoner extends BaseComponent {
      */
     emit(type, data) {
         this.listeners[type].forEach(callback => callback(data))
-
         return this
     }
 
@@ -215,25 +217,63 @@ export default class DropZoner extends BaseComponent {
             return
         }
 
+        const fileMap = new Map()
         // Prefer .items, which allow folder traversal if necessary.
         if (itemsCount > 0) {
             const entries = items.map(item => item.webkitGetAsEntry())
-            // if (entries[0].name.match(/\.zip$/)) {
+            // const [firstEntry] = entries
+            // if (firstEntry.name.match(/\.zip$/)) {
             //     this.loadZip(items[0].getAsFile())
-            // } else {
-            //     this.loadNextEntry(new Map(), entries)
             // }
-            this.loadNextEntry(new Map(), entries)
-
+            //
+            // this.loadNextEntry(new Map(), entries)
+            let index = 0
+            for (const entry of entries) {
+                if (entry) {
+                    if (entry.name.match(/\.zip$/)) {
+                        this.loadZip(items[index].getAsFile())
+                    } else {
+                        this.scanFiles(entry, fileMap)
+                    }
+                }
+                index++
+            }
+            this.emit('drop', {files: fileMap})
             return
         }
 
+        const [firstFile] = files
         // Fall back to .files, since folders can't be traversed.
-        // if (filesCount === 1 && files[0].name.match(/\.zip$/)) {
-        //     this.loadZip(files[0])
-        // }
+        if (filesCount === 1 && firstFile.name.match(/\.zip$/)) {
+            this.loadZip(files[0])
+        }
 
         this.emit('drop', {files: new Map(files.map(file => [file.name, file]))})
+    }
+
+    /**
+     *
+     * @param {FileSystemEntry} entry
+     * @param {Map<string, File>} fileMap
+     */
+    scanFiles(entry, fileMap) {
+        if (entry.isFile) {
+            const onSuccess = file => {
+                fileMap.set(entry.fullPath, file)
+            }
+            const onError = () => console.error(`Could not load file: ${entry.fullPath}`)
+            entry.file(onSuccess, onError)
+        } else if (entry.isDirectory) {
+            const readerCallback = entries => {
+                entries.forEach((item) => {
+                    this.scanFiles(item, fileMap)
+                })
+            }
+            const reader = entry.createReader()
+            reader.readEntries(readerCallback)
+        } else {
+            console.warn(`Unknown asset type: ${entry.fullPath}`)
+        }
     }
 
     /**
@@ -247,10 +287,10 @@ export default class DropZoner extends BaseComponent {
         const files = [].slice.call(this.inputElement.files)
 
         // Automatically decompress a zip archive if it is the only file given.
-        // if (files.length === 1 && this.isZip(files[0])) {
-        //     this.loadZip(files[0])
-        //     return
-        // }
+        if (files.length === 1 && this.isZip(files[0])) {
+            this.loadZip(files[0])
+            return
+        }
 
         const fileMap = new Map()
         files.forEach(file => fileMap.set(file.webkitRelativePath ?? file.name, file))
@@ -266,7 +306,6 @@ export default class DropZoner extends BaseComponent {
      */
     loadNextEntry(fileMap, entries) {
         const entry = entries.pop()
-
         if (!entry) {
             this.emit('drop', {files: fileMap})
             return
@@ -277,7 +316,7 @@ export default class DropZoner extends BaseComponent {
                 fileMap.set(entry.fullPath, file)
                 this.loadNextEntry(fileMap, entries)
             }
-            const onError = () => console.error('Could not load file: %s', entry.fullPath)
+            const onError = () => console.error(`Could not load file: ${entry.fullPath}`)
             entry.file(onSuccess, onError)
         } else if (entry.isDirectory) {
             // readEntries() must be called repeatedly until it stops returning results.
@@ -294,7 +333,7 @@ export default class DropZoner extends BaseComponent {
             }
             reader.readEntries(readerCallback)
         } else {
-            console.warn('Unknown asset type: ' + entry.fullPath)
+            console.warn(`Unknown asset type: ${entry.fullPath}`)
             this.loadNextEntry(fileMap, entries)
         }
     }
@@ -309,6 +348,10 @@ export default class DropZoner extends BaseComponent {
         const fileMap = new Map()
         const archive = new ZipFSManager()
 
+        /**
+         *
+         * @param {ZipDirectoryEntry|ZipEntry} node
+         */
         const traverse = node => {
             if (node.directory) {
                 node.children.forEach(traverse)
@@ -316,7 +359,7 @@ export default class DropZoner extends BaseComponent {
                 pending.push(new Promise(resolve => {
                     node.getData(new zip.BlobWriter(), blob => {
                         blob.name = node.name
-                        fileMap.set(node.getFullname(), blob)
+                        fileMap.set(node.getFullPath(), blob)
                         resolve()
                     })
                 }))
@@ -340,10 +383,11 @@ export default class DropZoner extends BaseComponent {
     }
 
     /**
-     * @param {string} message
+     * @param {Error|string} error
      * @throws
      */
-    fail(message) {
-        this.emit('droperror', {message: message})
+    fail(error) {
+        const message = isString(error) ? error : (error && error.toString())
+        this.emit('droperror', {message})
     }
 }

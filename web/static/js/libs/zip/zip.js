@@ -86,8 +86,7 @@ function getDataHelper(byteLength, bytes) {
 }
 
 // Readers
-function Reader() {
-}
+function Reader() {}
 
 function TextReader(text) {
     const that = this
@@ -131,13 +130,12 @@ function Data64URIReader(dataURI) {
     }
 
     function readUint8Array(index, length, callback) {
-        let i
         const data = getDataHelper(length)
         const start = Math.floor(index / 3) * 4
         const end = Math.ceil((index + length) / 3) * 4
         const bytes = self.atob(dataURI.substring(start + dataStart, end + dataStart))
         const delta = index - Math.floor(start / 4) * 3
-        for (i = delta; i < delta + length; i++) data.array[i - delta] = bytes.charCodeAt(i)
+        for (let i = delta; i < delta + length; i++) data.array[i - delta] = bytes.charCodeAt(i)
 
         callback(data.array)
     }
@@ -185,7 +183,7 @@ BlobReader.prototype.constructor = BlobReader
 function Writer() {
 }
 
-Writer.prototype.getData = function (callback) {
+Writer.prototype.getData = callback => {
     callback(this.data)
 }
 
@@ -209,7 +207,7 @@ function TextWriter(encoding) {
 
     function getData(callback, onerror) {
         const reader = new FileReader()
-        reader.onload = function (e) {
+        reader.onload = e => {
             callback(e.target.result)
         }
         reader.onerror = onerror
@@ -228,18 +226,19 @@ function Data64URIWriter(contentType) {
     const that = this
     let data = '', pending = ''
 
-    function init(callback) {
+    const init = callback => {
         data += `data:${(contentType || '')};base64,`
         callback()
     }
 
-    function writeUint8Array(array, callback) {
+    const writeUint8Array = (array, callback) => {
         let i, dataString = pending
         const delta = pending.length
         pending = ''
 
-        for (i = 0; i < (Math.floor((delta + array.length) / 3) * 3) - delta; i++)
+        for (i = 0; i < (Math.floor((delta + array.length) / 3) * 3) - delta; i++) {
             dataString += String.fromCharCode(array[i])
+        }
 
         for (; i < array.length; i++) pending += String.fromCharCode(array[i])
 
@@ -249,8 +248,8 @@ function Data64URIWriter(contentType) {
         callback()
     }
 
-    function getData(callback) {
-        callback(data + self.btoa(pending))
+    const getData = callback => {
+        callback(`${data}${self.btoa(pending)}`)
     }
 
     that.init = init
@@ -318,10 +317,12 @@ function launchWorkerProcess(worker, initialMessage, reader, writer, offset, siz
     const onmessage = event => {
         const message = event.data, data = message.data, err = message.error
         if (err) {
-            err.toString = () => { return 'Error: ' + this.message }
+            err.toString = () => { return `Error: ${this.message}` }
             onreaderror(err)
+
             return
         }
+
         if (message.sn !== sn) return
         if (typeof message.codecTime === 'number') worker.codecTime += message.codecTime // should be before onflush()
         if (typeof message.crcTime === 'number') worker.crcTime += message.crcTime
@@ -333,8 +334,8 @@ function launchWorkerProcess(worker, initialMessage, reader, writer, offset, siz
                     writer.writeUint8Array(data, () => {
                         step()
                     }, onwriteerror)
-                } else
-                    step()
+                } else step()
+
                 break
             case 'flush':
                 crc = message.crc
@@ -344,13 +345,16 @@ function launchWorkerProcess(worker, initialMessage, reader, writer, offset, siz
                         onflush()
                     }, onwriteerror)
                 } else onflush()
+
                 break
             case 'progress':
                 if (onprogress) onprogress(index + message.loaded, size)
+
                 break
             case 'importScripts': //no need to handle here
             case 'newTask':
             case 'echo':
+
                 break
             default:
                 console.warn('zip.js:launchWorkerProcess: unknown message: ', message)
@@ -456,8 +460,7 @@ function inflate(worker, sn, reader, writer, offset, size, computeCrc32, onend, 
             crcType,
         }
         launchWorkerProcess(worker, initialMessage, reader, writer, offset, size, onprogress, onend, onreaderror, onwriteerror)
-    } else
-        launchProcess(new Inflater(), reader, writer, offset, size, crcType, onprogress, onend, onreaderror, onwriteerror)
+    } else launchProcess(new Inflater(), reader, writer, offset, size, crcType, onprogress, onend, onreaderror, onwriteerror)
 }
 
 function deflate(worker, sn, reader, writer, level, onend, onprogress, onreaderror, onwriteerror) {
@@ -571,39 +574,39 @@ function createZipReader(reader, callback, onerror) {
     Entry.prototype.getData = function (writer, onend, onprogress, checkCrc32) {
         const that = this
 
-        function testCrc32(crc32) {
+        const testCrc32 = crc32 => {
             const dataCrc32 = getDataHelper(4)
             dataCrc32.view.setUint32(0, crc32)
             return that.crc32 === dataCrc32.view.getUint32(0)
         }
 
-        function getWriterData(uncompressedSize, crc32) {
+        const getWriterData = (uncompressedSize, crc32) => {
             if (checkCrc32 && !testCrc32(crc32))
                 onerror(ERR_CRC)
             else
-                writer.getData(function (data) {
+                writer.getData(data => {
                     onend(data)
                 })
         }
 
-        function onreaderror(err) {
+        const onreaderror = err => {
             onerror(err || ERR_READ_DATA)
         }
 
-        function onwriteerror(err) {
+        const onwriteerror = err => {
             onerror(err || ERR_WRITE_DATA)
         }
 
         reader.readUint8Array(that.offset, 30, function (bytes) {
             const data = getDataHelper(bytes.length, bytes)
-            let dataOffset
             if (data.view.getUint32(0) !== 0x504b0304) {
                 onerror(ERR_BAD_FORMAT)
+
                 return
             }
-
             readCommonHeader(that, data, 4, false, onerror)
-            dataOffset = that.offset + 30 + that.filenameLength + that.extraFieldLength
+
+            let dataOffset = that.offset + 30 + that.filenameLength + that.extraFieldLength
             writer.init(() => {
                 if (that.compressionMethod === 0)
                     copy(that._worker, inflateSN++, reader, writer, dataOffset, that.compressedSize, checkCrc32, getWriterData, onprogress, onreaderror, onwriteerror)
@@ -917,7 +920,7 @@ function createWorker(type, callback, onerror) {
     if (Zip.workerScripts) {
         scripts = Zip.workerScripts[type]
         if (!Array.isArray(scripts)) {
-            onerror(new Error('zip.workerScripts.' + type + ' is not an array!'))
+            onerror(new Error(`zip.workerScripts.${type} is not an array!`))
             return
         }
         scripts = resolveURLs(scripts)
@@ -925,7 +928,7 @@ function createWorker(type, callback, onerror) {
         scripts = DEFAULT_WORKER_SCRIPTS[type].slice(0)
         scripts[0] = (Zip.workerScriptsPath || '') + scripts[0]
     }
-    const worker = new Worker(scripts[0])
+    const worker = new Worker(scripts[0], {type: 'module'})
     // record total consumed time by inflater/deflater/crc32 in this worker
     worker.codecTime = worker.crcTime = 0
     worker.postMessage({type: 'importScripts', scripts: scripts.slice(1)})
@@ -1035,6 +1038,9 @@ const Zip = {
      *   inflater: ['z-worker.js', 'inflate.js']
      * };
      */
-    workerScripts: './js/lib/zip/z-worker.js',
+    workerScripts: {
+        deflater: ['./js/libs/zip/z-worker.js', './js/libs/zip/deflate.js'],
+        inflater: ['./js/libs/zip/z-worker.js', './js/libs/zip/inflate.js'],
+    },
 }
 export default Zip

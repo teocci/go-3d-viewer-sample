@@ -23,11 +23,9 @@
 
     --dark-gray-bg: hsl(210, 2%, 20%);
 
-    --summary-width: 280px;
-    --modal-width: 700px;
-    --modal-height: 520px;
-
     --footer-height: 32px;
+    --toolbar-i-size: 2rem;
+    --toolbar-icon-size: 1.25rem;
 
     --z-summary: 100;
     --z-modal: 200;

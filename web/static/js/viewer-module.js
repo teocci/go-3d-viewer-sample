@@ -63,7 +63,7 @@ export default class ViewerModule {
     initListeners() {
         this.dropZoner.on('drop', ({files}) => this.loadFile(files))
         this.dropZoner.on('dropstart', () => this.showSpinner())
-        this.dropZoner.on('droperror', () => this.hideSpinner())
+        this.dropZoner.on('droperror', e => this.onError(e))
     }
 
     initViewer(type) {
@@ -91,7 +91,9 @@ export default class ViewerModule {
      */
     loadFile(fileMap) {
         let fileInfo = null
+        console.log({fileMap})
         Array.from(fileMap).forEach(([path, file]) => {
+            console.log({file})
             const name = file.name
             if (name.match(/\.(stl|fbx)$/)) {
                 const lastDot = name.lastIndexOf('.')

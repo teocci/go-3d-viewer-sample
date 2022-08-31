@@ -31,7 +31,7 @@ const inflate_mask = [
     0x00001fff,
     0x00003fff,
     0x00007fff,
-    0x0000ffff
+    0x0000ffff,
 ]
 
 const MANY = 1440
@@ -347,10 +347,10 @@ function InfTree() {
     }
 
     that.inflate_trees_bits = (c, // 19 code lengths
-                                        bb, // bits tree desired/actual depth
-                                        tb, // bits tree result
-                                        hp, // space for trees
-                                        z, // for messages
+                               bb, // bits tree desired/actual depth
+                               tb, // bits tree result
+                               hp, // space for trees
+                               z, // for messages
     ) => {
         let result
         initWorkArea(19)
@@ -367,14 +367,14 @@ function InfTree() {
     }
 
     that.inflate_trees_dynamic = (nl, // number of literal/length codes
-                                           nd, // number of distance codes
-                                           c, // that many (total) code lengths
-                                           bl, // literal desired/actual bit depth
-                                           bd, // distance desired/actual bit depth
-                                           tl, // literal/length tree result
-                                           td, // distance tree result
-                                           hp, // space for trees
-                                           z, // for messages
+                                  nd, // number of distance codes
+                                  c, // that many (total) code lengths
+                                  bl, // literal desired/actual bit depth
+                                  bd, // distance desired/actual bit depth
+                                  tl, // literal/length tree result
+                                  td, // distance tree result
+                                  hp, // space for trees
+                                  z, // for messages
     ) => {
         let result
 
@@ -417,9 +417,9 @@ function InfTree() {
 }
 
 InfTree.inflate_trees_fixed = (bl, // literal desired/actual bit depth
-                                        bd, // distance desired/actual bit depth
-                                        tl,// literal/length tree result
-                                        td,// distance tree result
+                               bd, // distance desired/actual bit depth
+                               tl,// literal/length tree result
+                               td,// distance tree result
 ) => {
     bl[0] = fixed_bl
     bd[0] = fixed_bd
@@ -1759,27 +1759,28 @@ const BAD = 13 // got an error--stay here
 
 const mark = [0, 0, 0xff, 0xff]
 
-function Inflate() {
-    const that = this
+class Inflate {
 
-    that.mode = 0 // current inflate mode
+    constructor() {
+        this.mode = 0 // current inflate mode
 
-    // mode dependent information
-    that.method = 0 // if FLAGS, method byte
+        // mode dependent information
+        this.method = 0 // if FLAGS, method byte
 
-    // if CHECK, check values to compare
-    that.was = [0] // new Array(1); // computed check value
-    that.need = 0 // stream check value
+        // if CHECK, check values to compare
+        this.was = [0] // new Array(1); // computed check value
+        this.need = 0 // stream check value
 
-    // if BAD, inflateSync's marker bytes count
-    that.marker = 0
+        // if BAD, inflateSync's marker bytes count
+        this.marker = 0
 
-    // mode independent information
-    that.wbits = 0 // log2(window size) (8..15, defaults to 15)
+        // mode independent information
+        this.wbits = 0 // log2(window size) (8..15, defaults to 15)
 
-    // this.blocks; // current inflate_blocks state
+        // this.blocks; // current inflate_blocks state
+    }
 
-    function inflateReset(z) {
+    inflateReset(z) {
         if (!z || !z.istate)
             return Z_STREAM_ERROR
 
@@ -1790,39 +1791,37 @@ function Inflate() {
         return Z_OK
     }
 
-    that.inflateEnd = function (z) {
-        if (that.blocks)
-            that.blocks.free(z)
-        that.blocks = null
+    inflateEnd(z) {
+        if (this.blocks) this.blocks.free(z)
+        this.blocks = null
         // ZFREE(z, z->state);
         return Z_OK
     }
 
-    that.inflateInit = function (z, w) {
+    inflateInit(z, w) {
         z.msg = null
-        that.blocks = null
+        this.blocks = null
 
         // set window size
         if (w < 8 || w > 15) {
-            that.inflateEnd(z)
+            this.inflateEnd(z)
             return Z_STREAM_ERROR
         }
-        that.wbits = w
+        this.wbits = w
 
         z.istate.blocks = new InfBlocks(z, 1 << w)
 
         // reset state
-        inflateReset(z)
+        this.inflateReset(z)
         return Z_OK
     }
 
-    that.inflate = function (z, f) {
-        let r
-        let b
-
+    inflate(z, f) {
         if (!z || !z.istate || !z.next_in) return Z_STREAM_ERROR
 
         f = f === Z_FINISH ? Z_BUF_ERROR : Z_OK
+
+        let r, b
         r = Z_BUF_ERROR
         while (true) {
             // System.out.println("mode: "+z.istate.mode);
@@ -1849,6 +1848,7 @@ function Inflate() {
                 /* falls through */
                 case FLAG:
                     if (z.avail_in === 0) return r
+
                     r = f
 
                     z.avail_in--
@@ -1943,29 +1943,28 @@ function Inflate() {
         }
     }
 
-    that.inflateSetDictionary = function (z, dictionary, dictLength) {
+    inflateSetDictionary(z, dictionary, dictLength) {
+        if (!z || !z.istate || z.istate.mode !== DICT0) return Z_STREAM_ERROR
+
         let index = 0
         let length = dictLength
-        if (!z || !z.istate || z.istate.mode !== DICT0)
-            return Z_STREAM_ERROR
-
         if (length >= (1 << z.istate.wbits)) {
             length = (1 << z.istate.wbits) - 1
             index = dictLength - length
         }
         z.istate.blocks.set_dictionary(dictionary, index, length)
         z.istate.mode = BLOCKS
+
         return Z_OK
     }
 
-    that.inflateSync = function (z) {
+    inflateSync(z) {
+        if (!z || !z.istate) return Z_STREAM_ERROR
+
         let n // number of bytes to look at
         let p // pointer to bytes
         let m // number of marker bytes found in a row
         let r, w // temporaries to save total_in and total_out
-
-        // set up
-        if (!z || !z.istate) return Z_STREAM_ERROR
 
         if (z.istate.mode !== BAD) {
             z.istate.mode = BAD
@@ -2002,7 +2001,7 @@ function Inflate() {
         }
         r = z.total_in
         w = z.total_out
-        inflateReset(z)
+        this.inflateReset(z)
         z.total_in = r
         z.total_out = w
         z.istate.mode = BLOCKS
@@ -2017,7 +2016,7 @@ function Inflate() {
     // but removes the length bytes of the resulting empty stored block. When
     // decompressing, PPP checks that at the end of input packet, inflate is
     // waiting for these length bytes.
-    that.inflateSyncPoint = z => {
+    inflateSyncPoint(z) {
         if (!z || !z.istate || !z.istate.blocks) return Z_STREAM_ERROR
 
         return z.istate.blocks.sync_point()
@@ -2026,114 +2025,123 @@ function Inflate() {
 
 // ZStream
 
-function ZStream() {
-}
+class ZStream {
+    constructor() {
+        this.istate = null
 
-ZStream.prototype = {
-    inflateInit: function (bits) {
-        const that = this
-        that.istate = new Inflate()
-        if (!bits)
-            bits = MAX_BITS
-        return that.istate.inflateInit(that, bits)
-    },
+        this.next_in = null
+        this.next_out = null
 
-    inflate: function (f) {
-        const that = this
-        if (!that.istate)
-            return Z_STREAM_ERROR
-        return that.istate.inflate(that, f)
-    },
+        this.next_in_index = 0
+        this.next_out_index = 0
 
-    inflateEnd: () => {
-        const that = this
-        if (!that.istate)
-            return Z_STREAM_ERROR
-        const ret = that.istate.inflateEnd(that)
-        that.istate = null
+        this.avail_in = 0
+        this.avail_out = 0
+    }
+
+    inflateInit(bits) {
+        this.istate = new Inflate()
+        if (!bits) bits = MAX_BITS
+
+        return this.istate.inflateInit(this, bits)
+    }
+
+    inflate(f) {
+        if (!this.istate) return Z_STREAM_ERROR
+
+        return this.istate.inflate(this, f)
+    }
+
+    inflateEnd() {
+        if (!this.istate) return Z_STREAM_ERROR
+
+        const ret = this.istate.inflateEnd(this)
+        this.istate = null
+
         return ret
-    },
+    }
 
-    inflateSync: () => {
-        const that = this
-        if (!that.istate)
-            return Z_STREAM_ERROR
-        return that.istate.inflateSync(that)
-    },
-    inflateSetDictionary: function (dictionary, dictLength) {
-        const that = this
-        if (!that.istate)
-            return Z_STREAM_ERROR
-        return that.istate.inflateSetDictionary(that, dictionary, dictLength)
-    },
-    read_byte: function (start) {
-        const that = this
-        return that.next_in.subarray(start, start + 1)[0]
-    },
-    read_buf: function (start, size) {
-        const that = this
-        return that.next_in.subarray(start, start + size)
-    },
+    inflateSync() {
+        if (!this.istate) return Z_STREAM_ERROR
+
+        return this.istate.inflateSync(this)
+    }
+
+    inflateSetDictionary(dictionary, dictLength) {
+        if (!this.istate) return Z_STREAM_ERROR
+
+        return this.istate.inflateSetDictionary(this, dictionary, dictLength)
+    }
+
+    read_byte(start) {
+        return this.next_in.subarray(start, start + 1)[0]
+    }
+
+    read_buf(start, size) {
+        return this.next_in.subarray(start, start + size)
+    }
 }
 
 // Inflater
+export class Inflater {
+    constructor() {
+        this.z = new ZStream(this)
+        this.bufsize = 512
 
-export function Inflater() {
-    const that = this
-    const z = new ZStream()
-    const bufsize = 512
-    const flush = Z_NO_FLUSH
-    const buf = new Uint8Array(bufsize)
-    let nomoreinput = false
+        this.buf = new Uint8Array(this.bufsize)
 
-    z.inflateInit()
-    z.next_out = buf
+        this.nomoreinput = false
 
-    that.append = function (data, onprogress) {
-        let err, buffers = [], lastIndex = 0, bufferIndex = 0, bufferSize = 0, array
+        this.z.inflateInit()
+        this.z.next_out = this.buf
+    }
+
+    append(data, onprogress) {eSize = 0, array
 
         if (data.length === 0) return
 
-        z.next_in_index = 0
-        z.next_in = data
-        z.avail_in = data.length
+        this.z.next_in_index = 0
+        this.z.next_in = data
+        this.z.avail_in = data.length
 
         do {
-            z.next_out_index = 0
-            z.avail_out = bufsize
-            if ((z.avail_in === 0) && (!nomoreinput)) { // if buffer is empty and more input is available, refill it
-                z.next_in_index = 0
-                nomoreinput = true
+            this.z.next_out_index = 0
+            this.z.avail_out = this.bufsize
+            if ((this.z.avail_in === 0) && (!this.nomoreinput)) { // if buffer is empty and more input is available, refill it
+                this.z.next_in_index = 0
+                this.nomoreinput = true
             }
 
-            err = z.inflate(flush)
-            if (nomoreinput && (err === Z_BUF_ERROR)) {
-                if (z.avail_in !== 0) throw new Error('inflating: bad input')
+            err = this.z.inflate(this.flush)
+            if (this.nomoreinput && (err === Z_BUF_ERROR)) {
+                if (this.z.avail_in !== 0) throw new Error('inflating: bad input')
             } else if (err !== Z_OK && err !== Z_STREAM_END) throw new Error(`inflating: ${z.msg}`)
 
-            if ((nomoreinput || err === Z_STREAM_END) && (z.avail_in === data.length)) throw new Error('inflating: bad input')
+            if ((this.nomoreinput || err === Z_STREAM_END) && (this.z.avail_in === data.length)) throw new Error('inflating: bad input')
 
-            if (z.next_out_index) {
-                if (z.next_out_index === bufsize) buffers.push(new Uint8Array(buf))
-                else buffers.push(new Uint8Array(buf.subarray(0, z.next_out_index)))
+            if (this.z.next_out_index) {
+                if (this.z.next_out_index === this.bufsize) buffers.push(new Uint8Array(this.buf))
+                else buffers.push(new Uint8Array(this.buf.subarray(0, this.z.next_out_index)))
             }
 
-            bufferSize += z.next_out_index
-            if (onprogress && z.next_in_index > 0 && z.next_in_index !== lastIndex) {
-                onprogress(z.next_in_index)
-                lastIndex = z.next_in_index
+            bufferSize += this.z.next_out_index
+            if (onprogress && this.z.next_in_index > 0 && this.z.next_in_index !== lastIndex) {
+                onprogress(this.z.next_in_index)
+                lastIndex = this.z.next_in_index
             }
-        } while (z.avail_in > 0 || z.avail_out === 0)
+        } while (this.z.avail_in > 0 || this.z.avail_out === 0)
 
         array = new Uint8Array(bufferSize)
-        buffers.forEach(function (chunk) {
+        buffers.forEach(chunk => {
             array.set(chunk, bufferIndex)
             bufferIndex += chunk.length
         })
+
         return array
     }
-    that.flush = () => {
-        z.inflateEnd()
+
+    flush() {
+        this.z.inflateEnd()
     }
 }
 

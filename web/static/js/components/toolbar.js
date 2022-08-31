@@ -19,27 +19,27 @@ export default class Toolbar extends BaseComponent {
     static CAMERA_CONTROLS = [
         {
             id: Toolbar.CAMERA_CONTROL_ROTATE,
-            name: 'Rotate',
+            name: '회전',
             icon: 'fa-arrows-rotate',
         },
         {
             id: Toolbar.CAMERA_CONTROL_PAN,
-            name: 'Pan',
+            name: '이동',
             icon: 'fa-arrow-right-arrow-left',
         },
         {
             id: Toolbar.CAMERA_CONTROL_ZOOM,
-            name: 'Zoom',
+            name: '줌',
             icon: 'fa-magnifying-glass',
         },
         {
             id: Toolbar.CAMERA_CONTROL_RESET,
-            name: 'Reset Camera',
+            name: '초기화',
             icon: 'fa-clock-rotate-left',
         },
         {
             id: Toolbar.FILE_CONTROL_OPEN,
-            name: 'Open Model',
+            name: '파일 열기',
             icon: 'fa-folder-open',
         },
     ]

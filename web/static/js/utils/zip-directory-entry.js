@@ -2,8 +2,8 @@
  * Created by RTT.
  * Author: teocci@yandex.com on 2022-8월-19
  */
-import ZipEntry from './zip-entry.js'
 import zip from '../libs/zip/zip.js'
+import ZipEntry from './zip-entry.js'
 import ZipBlobReader from './zip-blob-reader.js'
 import ZipFsUtil from './zip-fs-util.js'
 
@@ -83,17 +83,18 @@ export default class ZipDirectoryEntry extends ZipEntry {
         zip.createReader(reader, zipReader => {
             zipReader.getEntries(entries => {
                 entries.forEach(entry => {
-                    const path = entry.filename.split('/'), name = path.pop()
                     let parent = that
+                    const path = entry.filename.split('/'), name = path.pop()
                     path.forEach(pathPart => {
                         parent = parent.getChildByName(pathPart) ?? new ZipDirectoryEntry(that.fs, pathPart, null, parent)
                     })
 
-                    if (!entry.directory)
+                    if (!entry.directory) {
                         ZipFsUtil.addChild(parent, name, {
                             data: entry,
                             Reader: ZipBlobReader,
                         })
+                    }
                 })
                 onend()
             })

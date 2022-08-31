@@ -1,5 +1,5 @@
-import ZipEntry from './zip-entry.js'
 import zip from '../libs/zip/zip.js'
+import ZipEntry from './zip-entry.js'
 
 /**
  * Created by RTT.
@@ -11,6 +11,7 @@ export default class ZipFileEntry extends ZipEntry {
 
         this.Reader = params.Reader
         this.Writer = params.Writer
+
         this.data = params.data
 
         if (params.getData) {
@@ -20,12 +21,12 @@ export default class ZipFileEntry extends ZipEntry {
 
     getData(writer, onend, onprogress, onerror) {
         const that = this
-        if (!writer || (writer.constructor === that.Writer && that.data)) onend(that.data)
+        if (!writer || (writer.constructor === this.Writer && this.data)) onend(this.data)
         else {
-            if (!that.reader) that.reader = new that.Reader(that.data, onerror)
-            that.reader.init(() => {
+            if (!this.reader) this.reader = new this.Reader(this.data, onerror)
+            this.reader.init(() => {
                 writer.init(() => {
-                    this.bufferedCopy(that.reader, writer, onend, onprogress, onerror)
+                    that.bufferedCopy(that.reader, writer, onend, onprogress, onerror)
                 }, onerror)
             })
         }

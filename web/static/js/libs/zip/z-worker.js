@@ -23,7 +23,7 @@
 
     const handlers = {
         importScripts: doImportScripts,
-        newTask: newTask,
+        newTask,
         append: processData,
         flush: processData,
     }
@@ -31,8 +31,12 @@
     // deflater/inflater tasks indexed by serial numbers
     const tasks = {}
 
-    function doImportScripts(msg) {
-        if (msg.scripts && msg.scripts.length > 0) importScripts.apply(undefined, msg.scripts)
+    async function doImportScripts(msg) {
+        console.log({script: msg.scripts})
+
+        if (msg.scripts && msg.scripts.length > 0) {
+            const module = await import(msg.scripts)
+        }
 
         postMessage({type: 'importScripts'})
     }
@@ -76,6 +80,7 @@
             }
         } else {
             delete tasks[sn]
+            console.log({codec: task.codec})
             output = task.codec.flush()
         }
         const codecTime = now() - start
