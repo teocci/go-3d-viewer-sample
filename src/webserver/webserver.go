@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"mime"
+	"net"
 	"net/http"
 	"strings"
 
@@ -16,7 +17,15 @@ import (
 )
 
 const (
-	formatAddress = "%s:%d"
+	defaultProtocol        = "http"
+	defaultPage            = "page.html"
+	defaultFaviconRoute    = "/favicon.ico"
+	defaultFaviconFilePath = "web/static/favicon.ico"
+
+	formatAddress        = "%s:%d"
+	formatURL            = "%s://%s/%s"
+	formatRelativePath   = "/%s"
+	formatStaticFilePath = "web/static/%s"
 )
 
 var (
@@ -32,17 +41,21 @@ func Start() {
 	router := gin.Default()
 	router.LoadHTMLGlob("web/templates/*")
 
-	router.StaticFS("/css", http.Dir("web/static/css"))
-	router.StaticFS("/js", http.Dir("web/static/js"))
-	router.StaticFS("/img", http.Dir("web/static/img"))
+	indexRoute := fmt.Sprintf(formatRelativePath, defaultPage)
+	indexFilePath := fmt.Sprintf(formatStaticFilePath, defaultPage)
+
 	router.StaticFS("/3d", http.Dir("web/static/3d"))
+	router.StaticFS("/css", http.Dir("web/static/css"))
 	router.StaticFS("/glsl", http.Dir("web/static/glsl"))
-	router.StaticFile("/page.html", "web/static/page.html")
-	router.StaticFile("/favicon.ico", "web/static/favicon.ico")
+	router.StaticFS("/img", http.Dir("web/static/img"))
+	router.StaticFS("/js", http.Dir("web/static/js"))
+
+	router.StaticFile(indexRoute, indexFilePath)
+	router.StaticFile(defaultFaviconRoute, defaultFaviconFilePath)
 
 	router.Use(CORSMiddleware())
 
-	fmt.Printf("[address] %v", addressFormat(address))
+	fmt.Println("[url]", urlFormat(address))
 
 	err := router.Run(address)
 	if err != nil {
@@ -50,10 +63,29 @@ func Start() {
 	}
 }
 
+func GetLocalIp() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "localhost"
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP.String()
+}
+
 func addressFormat(a string) string {
 	s := strings.Split(a, ":")
 	if s[0] == "" {
-		s[0] = "localhost"
+		s[0] = GetLocalIp()
 	}
 	return strings.Join(s[:], ":")
+}
+
+func urlFormat(a string) string {
+	host := addressFormat(a)
+	s := fmt.Sprintf(formatURL, defaultProtocol, host, defaultPage)
+
+	return s
 }
